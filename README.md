@@ -16,8 +16,8 @@ Dates and programmed session names are independent: October 10 was Saturday, log
 
 Serve this directory using `python -m http.server 8765`, then open http://localhost:8765/. No build, dependencies, analytics or third-party chart services are required.
 
-## Update now
+## Automatic updates
 
-Edit only the curated `data.js` snapshot and the relevant program/coach copy in `app.js`; inspect the complete diff before committing. Pages deploys commits to `main`. This deployment does not read a private repository or transfer future training logs automatically.
+An approved-field exporter in the private training repository updates only `data.js` when recognized workout records are committed to main. Current metrics, charts, session counts, dates and the printable coach briefing derive from that dataset. GitHub Pages publishes the resulting public commit. Source notes and raw private files are never transferred.
 
-See [PUBLICATION.md](PUBLICATION.md) for the publication boundary and [SYNC_PROPOSAL.md](SYNC_PROPOSAL.md) for a disabled-by-design future sync plan requiring approval.
+Program prescriptions remain dated to their latest private review. Ambiguous records, equipment changes and historical corrections stop the export for review, preserving the last published data. Markdown-only workouts must also be entered into the structured CSV logs. See [PUBLICATION.md](PUBLICATION.md) and [sync operations](SYNC_PROPOSAL.md).

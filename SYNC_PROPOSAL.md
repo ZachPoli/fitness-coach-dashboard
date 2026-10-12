@@ -1,35 +1,27 @@
-# Proposed private-to-public updates — NOT ENABLED
+# Approved fitness synchronization
 
-Current site is a manually curated snapshot. No private-repository workflow, new token, GitHub App, repository secret or synchronization job was installed.
+Automatic approved-field synchronization is configured in the private training repository. The owner approved the fitness-field boundary and saved a fine-grained GitHub token restricted to this public dashboard.
 
-## Recommended approach
+## What happens after logging
 
-1. Maintain an explicitly approved, structured export file in the private training repository, separate from free-text logs. Have a private-side exporter populate only allowlisted fields; reject unknown fields and ambiguous records rather than infer them.
-2. Trigger a private-side GitHub Action when the approved export changes. Validate schema, scan for secrets/contact information, calculate metrics, and generate only the sanitized public dataset. Never upload the private checkout, source logs, Actions artifacts containing logs, or Git history.
-3. Open a pull request in the public dashboard repository containing only the sanitized dataset changes. The pull request is already public: privacy review must occur on the private side BEFORE creation. Prefer a private review/approval gate on changed fields or notes.
-4. After approval, merge the dashboard pull request. The existing Pages branch deployment publishes it. Future automation must use the approved App/PAT identity or explicitly dispatch a Pages deployment: commits made with `GITHUB_TOKEN` do not trigger branch-based Pages builds. Unattended publication can be considered later only after the exporter is validated and the exact fields are approved.
+1. Commit structured lifting/running CSV records alongside the normal narrative logs on private main.
+2. The private GitHub Action validates the exporter, then reads the reviewed baseline and new rows.
+3. Recognized records become typed dates, numeric loads/repetitions, running distances/times, fixed movement/equipment identifiers and generated session status. Source notes supply dates and ambiguity checks but are never serialized.
+4. The action writes exactly `data.js` to public main using the saved token. No changes means no new public commit. GitHub Pages publishes changed data automatically.
+5. The dashboard recalculates metrics, charts, counts and coach text from that data. The header date is the latest workout date, not the time the automation ran.
 
-## Exact proposed field contract to approve
+The workflow runs only on private main pushes or manual dispatch, uses read-only GITHUB_TOKEN permissions, serializes runs, pins checkout to an upstream commit SHA, and exposes the sync credential only to the publication step. No raw private artifacts, history or notes are uploaded. GitHub's content SHA prevents overwriting a concurrent public data edit.
 
-| Record | Allowed fields |
-| --- | --- |
-| Snapshot | `schema_version`, `snapshot_date` |
-| Lift exposure | `date` (nullable for undated history), `sequence`, `movement_id`, `equipment_id`, `load_lb`, `load_basis` (total/per_hand/per_side/added), `load_is_approximate`, `sets[].clean_reps`, `sets[].role` (warmup/calibration/work), `source_record_id` |
-| Verified test | `date`, `movement_id`, `load_lb` or `distance_miles` and `elapsed_seconds`, `test_type`, `verification_basis` (athlete_log) |
-| Run session | `date`, `sequence`, `session_type`, `distance_miles` (nullable), `elapsed_seconds` (nullable), `distance_scope` (whole_session/recorded_portion/hard_work_only), `completion_status` |
-| Interval | `date`, `reps_planned`, `reps_completed`, `partial_rep_distance_miles` (nullable), `rep_distance_miles` or `rep_duration_seconds`, `speed_mph`, `recovery_seconds`, `recovery_speed_mph` |
-| Program | `block_id`, `rotation_number`, `programmed_day`, `movement_id`, `prescribed_sets`, `rep_min`, `rep_max`, `target_load_lb` (nullable), `target_duration_minutes` (nullable), `target_speed_mph` (nullable), `completion_status` |
-| Goals | `bench_1rm_lb`, `squat_1rm_lb`, `conventional_deadlift_1rm_lb`, `mile_seconds` |
+## When a review is needed
 
-No free-text source notes are transferred. Coach/recovery observations require a separately reviewed manual summary or explicitly approved structured flags. Bodyweight, body measurements, injury narrative, supplements, work details, contact details and locations remain excluded by default.
+Unknown exercise/equipment names, changed setups, ambiguous or assisted reps, conflicting dates, unsupported run formats, historical corrections and future training blocks stop publication. The last public dataset remains intact. The private Actions failure explains the class of problem without copying source rows into output. Review and rerun privately.
 
-## Permissions to approve before implementation
+The CSV logs are authoritative for automatic numeric updates. Markdown-only entries do not create new metrics. Program targets and narrative coaching observations require a reviewed update of the approved snapshot; they remain explicitly dated until then. Changed private program text triggers a review-needed notice without publishing that text. New lift singles are not automatically labeled verified PR tests.
 
-- The private workflow's `GITHUB_TOKEN`: read access to its own repository only. It cannot write to a separate repository by default.
-- Preferred cross-repository credential: short-lived GitHub App installation token, scoped only to the public dashboard, with Contents and Pull requests read/write and Metadata read. Store the App private key solely as a private Actions secret. No administration, secrets or private-repository access granted to the public workflow.
-- Simpler alternative: expiring fine-grained personal access token restricted to the public dashboard with Contents and Pull requests write. Approve owner, expiry and exact scopes before creating/storing it.
-- Trigger, private approval gate, final field list and whether future merges may be automatic all require approval. Existing static Pages publication needs no cross-repository credential.
+## Credential and maintenance
 
-Use concurrency and a stable update branch to avoid duplicate PRs; reject stale exports and schema changes. Pin action dependencies to reviewed commit SHAs, mask credentials and keep workflow logs free of source notes. Standard GitHub Actions usage avoids a new hosting subscription; private-repository usage remains subject to the account's included minutes.
+The token is stored as `FITNESS_DASHBOARD_SYNC_TOKEN` in private Actions secrets. Its write access is restricted to `fitness-coach-dashboard`; it has Contents and Pull requests read/write with required Metadata read. The implemented publisher uses only Contents, so Pull requests permission can be removed at renewal. Token expiry: **January 9, 2027**. Replace the secret with an equivalently restricted token before that date and run the private workflow to verify it.
 
-References: [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [minimum token permissions and App/PAT options](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token).
+Disable the private workflow to pause updates. The public site will continue serving its last successful dataset. No additional hosting service or recurring paid subscription is configured; normal GitHub usage limits apply.
+
+References: [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [GitHub Actions security guidance](https://docs.github.com/en/actions/reference/security/secure-use).
