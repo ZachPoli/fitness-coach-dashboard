@@ -7,7 +7,7 @@ Current site is a manually curated snapshot. No private-repository workflow, new
 1. Maintain an explicitly approved, structured export file in the private training repository, separate from free-text logs. Have a private-side exporter populate only allowlisted fields; reject unknown fields and ambiguous records rather than infer them.
 2. Trigger a private-side GitHub Action when the approved export changes. Validate schema, scan for secrets/contact information, calculate metrics, and generate only the sanitized public dataset. Never upload the private checkout, source logs, Actions artifacts containing logs, or Git history.
 3. Open a pull request in the public dashboard repository containing only the sanitized dataset changes. The pull request is already public: privacy review must occur on the private side BEFORE creation. Prefer a private review/approval gate on changed fields or notes.
-4. After approval, merge the dashboard pull request. The existing Pages branch deployment publishes it. Unattended publication can be considered later only after the exporter is validated and the exact fields are approved.
+4. After approval, merge the dashboard pull request. The existing Pages branch deployment publishes it. Future automation must use the approved App/PAT identity or explicitly dispatch a Pages deployment: commits made with `GITHUB_TOKEN` do not trigger branch-based Pages builds. Unattended publication can be considered later only after the exporter is validated and the exact fields are approved.
 
 ## Exact proposed field contract to approve
 
@@ -31,3 +31,5 @@ No free-text source notes are transferred. Coach/recovery observations require a
 - Trigger, private approval gate, final field list and whether future merges may be automatic all require approval. Existing static Pages publication needs no cross-repository credential.
 
 Use concurrency and a stable update branch to avoid duplicate PRs; reject stale exports and schema changes. Pin action dependencies to reviewed commit SHAs, mask credentials and keep workflow logs free of source notes. Standard GitHub Actions usage avoids a new hosting subscription; private-repository usage remains subject to the account's included minutes.
+
+References: [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [minimum token permissions and App/PAT options](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token).
