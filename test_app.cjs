@@ -53,8 +53,10 @@ test('unique Block 3 counts exclude peak sessions and duplicate records', () => 
   assert.doesNotMatch(run('peakView()'), /5\/4|6\/4/);
 });
 test('peak labels do not invent rotation zero', () => {
-  const run = boot(original);
-  assert.match(run('overview()'), /Peak · Bench 1RM test/);
+  const data = clone(original);
+  data.sessions.push(['2099-01-01', 0, 'Recovery', 'Logged', 'Synthetic peak visit']);
+  const run = boot(data);
+  assert.match(run('overview()'), /Peak · Recovery/);
   assert.match(run('historyView()'), /Peak · Recovery/);
   assert.doesNotMatch(run('overview()') + run('historyView()') + run('coachText()'), /R0\b|Rotation 0\b/);
 });
